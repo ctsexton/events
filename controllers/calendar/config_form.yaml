@@ -1,0 +1,11 @@
+name: Calendar
+modelClass: CamSexton\Events\Models\Calendar
+form: $/camsexton/events/models/calendar/fields.yaml
+defaultRedirect: camsexton/events/calendar
+create:
+    redirect: 'camsexton/events/calendar/update/:id'
+    redirectClose: camsexton/events/calendar
+update:
+    redirect: camsexton/events/calendar
+    redirectClose: camsexton/events/calendar
+preview: {  }

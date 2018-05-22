@@ -1,0 +1,11 @@
+fields:
+    calendar_id:
+        label: 'Calendar ID'
+        span: full
+        placeholder: 123456789@group.calendar.google.com
+        required: 1
+        context:
+            - create
+            - update
+        type: text
+        comment: 'Copy this from the settings page of your Google Calendar.'

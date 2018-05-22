@@ -1,0 +1,20 @@
+plugin:
+    name: 'camsexton.events::lang.plugin.name'
+    description: 'camsexton.events::lang.plugin.description'
+    author: 'Cam Sexton'
+    icon: oc-icon-calendar
+    homepage: ''
+navigation:
+    main-menu-item:
+        label: CalendarSync
+        url: camsexton/events/calendar
+        icon: icon-calendar
+        sideMenu:
+            side-menu-item:
+                label: Calendar
+                url: camsexton/events/calendar
+                icon: icon-calendar
+            side-menu-item2:
+                label: Events
+                url: camsexton/events/events
+                icon: icon-sitemap

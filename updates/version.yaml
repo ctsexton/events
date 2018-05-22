@@ -1,0 +1,23 @@
+1.0.1:
+    - 'Initialize plugin.'
+1.0.2:
+    - 'Created table camsexton_events_calendar'
+    - builder_table_create_camsexton_events_calendar.php
+1.0.3:
+    - 'Created table camsexton_events_entries'
+    - builder_table_create_camsexton_events_entries.php
+1.0.4:
+    - 'Updated table camsexton_events_entries'
+    - builder_table_update_camsexton_events_entries.php
+1.0.5:
+    - 'Drop table camsexton_events_calendar'
+    - builder_table_delete_camsexton_events_calendar.php
+1.0.6:
+    - 'Created table camsexton_events_calendar'
+    - builder_table_create_camsexton_events_calendar_2.php
+1.0.7:
+    - 'Drop table camsexton_events_entries'
+    - builder_table_delete_camsexton_events_entries.php
+1.0.8:
+    - 'Created table camsexton_events_entries'
+    - builder_table_create_camsexton_events_entries_2.php

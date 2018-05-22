@@ -1,0 +1,16 @@
+columns:
+    calendar_name:
+        label: 'Calendar Name'
+        type: text
+    calendar_id:
+        label: 'Calendar ID'
+        type: text
+    last_updated:
+        label: 'Last Updated'
+        type: datetime
+    timezone:
+        label: Timezone
+        type: text
+    next_sync_token:
+        label: 'Next Sync Token'
+        type: text

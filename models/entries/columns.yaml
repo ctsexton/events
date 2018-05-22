@@ -1,0 +1,25 @@
+columns:
+    title:
+        label: Title
+        type: text
+        searchable: true
+        sortable: true
+    venue:
+        label: Venue
+        type: text
+        searchable: true
+        sortable: true
+    date_time:
+        label: 'Date & Time'
+        type: datetime
+        searchable: true
+        sortable: true
+    description:
+        label: Description
+        type: text
+        searchable: true
+    event_timezone:
+        label: Timezone
+        type: text
+        searchable: true
+        sortable: true

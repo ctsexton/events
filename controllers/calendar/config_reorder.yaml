@@ -1,0 +1,4 @@
+title: Calendar
+modelClass: CamSexton\Events\Models\Calendar
+toolbar:
+    buttons: reorder_toolbar
