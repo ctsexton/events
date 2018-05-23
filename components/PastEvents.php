@@ -33,6 +33,15 @@ class PastEvents extends ComponentBase
 			ORDER BY date_time DESC
 			");
 
+		if ($this->events == null) {
+			$noEvents = array(
+			"title" => "No Past Events",
+			"venue" => "",
+			"format_date" => "",
+			"description" => "");
+			$this->events = [$noEvents];
+			return;
+		}
 		foreach ($this->events as $item) {
 			// Change date timezone from UTC to event timezone
 			$date = $item->date_time;
@@ -40,6 +49,7 @@ class PastEvents extends ComponentBase
 			$tz = new DateTimeZone($item->event_timezone);
 			$format_date->setTimezone($tz);
 			$item->format_date = $format_date->format('l j F Y \a\t g:ia');
+			$item->description = htmlspecialchars_decode($item->description);
 		}
 	}
 }

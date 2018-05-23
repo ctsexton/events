@@ -154,7 +154,7 @@ class Plugin extends PluginBase
 				$date_time = $this->checkField($start, 'dateTime');
 				$event_timezone = $this->checkField($start, 'timeZone', $timezone_default);
 				$venue = $this->checkField($item, 'location');
-				$description = $this->checkField($item, 'description');
+				$description = htmlspecialchars(nl2br($this->checkField($item, 'description')));
 				$created_at = $this->checkField($item, 'created');
 				$updated_at = $this->checkField($item, 'updated');
 				
