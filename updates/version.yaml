@@ -21,3 +21,6 @@
 1.0.8:
     - 'Created table camsexton_events_entries'
     - builder_table_create_camsexton_events_entries_2.php
+1.0.9:
+    - 'Updated table camsexton_events_entries'
+    - builder_table_update_camsexton_events_entries_2.php

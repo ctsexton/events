@@ -27,7 +27,8 @@ class UpcomingEvents extends ComponentBase
 			venue,
 			date_time,
 			event_timezone,
-			description 
+			description,
+			file_id
 			FROM camsexton_events_entries
 			WHERE date_time > datetime('now')
 			ORDER BY date_time ASC
@@ -51,6 +52,12 @@ class UpcomingEvents extends ComponentBase
 			$format_date->setTimezone($tz);
 			$item->format_date = $format_date->format('l j F Y \a\t g:ia');
 			$item->description = htmlspecialchars_decode($item->description);
+			if ($item->file_id != "") {
+				$file_id = $item->file_id;
+				$item->photo_url = 'https://drive.google.com/uc?id=' . $file_id;
+			} else {
+				$item->photo_url = "";
+			}
 		}
 	}
 }

@@ -155,11 +155,18 @@ class Plugin extends PluginBase
 				$event_timezone = $this->checkField($start, 'timeZone', $timezone_default);
 				$venue = $this->checkField($item, 'location');
 				$description = htmlspecialchars(nl2br($this->checkField($item, 'description')));
+				$attachments = $this->checkField($item, 'attachments');
+				if ($attachments != "") {
+					$file_id = $attachments[0]['fileId'];
+					file_put_contents('php://stderr', print_r("File ID: " . $file_id ."\n", TRUE));
+				} else {
+					$file_id = "";
+				}
 				$created_at = $this->checkField($item, 'created');
 				$updated_at = $this->checkField($item, 'updated');
 				
 				file_put_contents('php://stderr', print_r("TITLE: " . $title . "\n", TRUE));
-				Db::statement('INSERT OR REPLACE INTO camsexton_events_entries (id, event_id, title, date_time, event_timezone, venue, description, created_at, updated_at) VALUES (
+				Db::statement('INSERT OR REPLACE INTO camsexton_events_entries (id, event_id, title, date_time, event_timezone, venue, description, file_id, created_at, updated_at) VALUES (
 					(SELECT id FROM camsexton_events_entries WHERE event_id = :event_id),
 					:event_id,
 					:title,
@@ -167,6 +174,7 @@ class Plugin extends PluginBase
 					:event_timezone,
 					:venue,
 					:description,
+					:file_id,
 					:created_at,
 					:updated_at)', [
 						'event_id' => $event_id,
@@ -175,6 +183,7 @@ class Plugin extends PluginBase
 						'event_timezone' => $event_timezone,
 						'venue' => $venue,
 						'description' => $description,
+						'file_id' => $file_id,
 						'created_at' => $created_at,
 						'updated_at' => $updated_at
 					]);
