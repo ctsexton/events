@@ -222,7 +222,7 @@ class Plugin extends PluginBase
 					}
 
 					// Open file handle for output.
-					$outHandle = fopen("storage/events-images/" . $file_id . ".jpeg", "w+");
+					$outHandle = fopen("storage/app/media/" . $file_id . ".jpeg", "w+");
 
 					// Until we have reached the EOF, read 1024 bytes at a time and write to the output file handle.
 					while (!$content->getBody()->eof()) {
@@ -232,7 +232,7 @@ class Plugin extends PluginBase
 					// Close output file handle.
 					fclose($outHandle);
 
-					file_put_contents('php://stderr', print_r("FILE DOWNLOADED: storage/events-images/" . $file_id . ".jpeg\n", TRUE));
+					file_put_contents('php://stderr', print_r("FILE DOWNLOADED: storage/app/media/" . $file_id . ".jpeg\n", TRUE));
 				}
 		}
 	}

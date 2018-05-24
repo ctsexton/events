@@ -54,7 +54,7 @@ class UpcomingEvents extends ComponentBase
 			$item->description = htmlspecialchars_decode($item->description);
 			if ($item->file_id != "") {
 				$file_id = $item->file_id;
-				$item->photo_url = 'storage/events-images/' . $file_id . ".jpeg";
+				$item->photo_url = 'storage/app/media/' . $file_id . ".jpeg";
 			} else {
 				$item->photo_url = "";
 			}
