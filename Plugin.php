@@ -34,10 +34,10 @@ class Plugin extends PluginBase
 			file_put_contents('php://stderr', print_r("NO CALENDAR GIVEN\n", TRUE));
 			return;
 		}
+		$calendar = $calArray[0];
 
 		// get API key from environment
 		$API_KEY = config("api.GCAL_API_KEY");
-		$calendar = $calArray[0];
 
 		// if calendar id is falsey then do NOT proceed
 		if ($calendar->calendar_id == FALSE) {
@@ -140,11 +140,25 @@ class Plugin extends PluginBase
 				]);
 	}
 
+	// If an array has a field, return the contents of that field, otherwise return an alternate value (defaults to "")
+	protected function checkField($array, $field, $emptyVal = "") {
+		if (isset($array[$field])) {
+			return $array[$field];
+		}
+		else {
+			return $emptyVal;
+		}
+	 }
+
+	// copy events in json into database
 	protected function loadEvents($json) {
 		// iterate through json, inserting or replacing entries
 
 		$timezone_default = $this->checkField($json, 'timeZone', 'UTC');
 		$items = $this->checkField($json, 'items');
+		if ($items == "") {
+			return;
+		}
 
 		foreach ($items as $number => $item) {
 
@@ -195,9 +209,13 @@ class Plugin extends PluginBase
 		}
 	}
 
+	// for all image attachment links in json, download from google drive
 	protected function downloadImages($json) {
 		//
 		$items = $this->checkField($json, 'items');
+		if ($items == "") {
+			return;
+		}
 
 		$client = $this->getClient();
 
@@ -237,14 +255,7 @@ class Plugin extends PluginBase
 		}
 	}
 
-	protected function checkField($array, $field, $emptyVal = "") {
-		if (isset($array[$field])) {
-			return $array[$field];
-		}
-		else {
-			return $emptyVal;
-		}
-	 }
+	// create new authenticated google drive client and return it
 	protected function getClient() {
 
 		$client = new Google_Client();
@@ -252,7 +263,6 @@ class Plugin extends PluginBase
 		$client->setAccessType("offline");        // offline access
 		$client->setIncludeGrantedScopes(true);   // incremental auth
 		$client->addScope(Google_Service_Drive::DRIVE_READONLY);
-		//$client->setRedirectUri('http://' . $_SERVER['HTTP_HOST'] . '/oauth2callback.php');
 		$authUrl = $client->createAuthUrl();
 
 		$credentialsPath = 'storage/credentials.json';
