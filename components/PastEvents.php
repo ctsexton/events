@@ -42,6 +42,7 @@ class PastEvents extends ComponentBase
 			$this->events = [$noEvents];
 			return;
 		}
+
 		foreach ($this->events as $item) {
 			// Change date timezone from UTC to event timezone
 			$date = $item->date_time;
@@ -50,6 +51,12 @@ class PastEvents extends ComponentBase
 			$format_date->setTimezone($tz);
 			$item->format_date = $format_date->format('l j F Y \a\t g:ia');
 			$item->description = htmlspecialchars_decode($item->description);
+			if ($item->file_id != "") {
+				$file_id = $item->file_id;
+				$item->photo_url = 'storage/app/media/' . $file_id . ".jpeg";
+			} else {
+				$item->photo_url = "";
+			}
 		}
 	}
 }
