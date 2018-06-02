@@ -211,12 +211,21 @@ class Plugin extends PluginBase
 
 	// for all image attachment links in json, download from google drive
 	protected function downloadImages($json) {
-		//
+
+		// Check that key file exists
+		if (!file_exists('storage/client_secret.json')) {
+			file_put_contents('php://stderr', print_r("NO CLIENT_SECRET FILE\n", TRUE));
+			return;
+		}
+
+		// Check that there are items in the array
+		// TO DO: check attachments at this point as well before getClient
 		$items = $this->checkField($json, 'items');
 		if ($items == "") {
 			return;
 		}
 
+		// Google Authentication
 		$client = $this->getClient();
 
 		// Start google drive service
