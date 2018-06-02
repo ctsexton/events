@@ -267,6 +267,12 @@ class Plugin extends PluginBase
 	// create new authenticated google drive client and return it
 	protected function getClient() {
 
+		// Check that key file exists
+		if (!file_exists('storage/client_secret.json')) {
+			file_put_contents('php://stderr', print_r("NO CLIENT_SECRET FILE\n", TRUE));
+			return;
+		}
+
 		$client = new Google_Client();
 		$client->setAuthConfig('storage/client_secret.json');
 		$client->setAccessType("offline");        // offline access
