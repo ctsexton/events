@@ -1,7 +1,7 @@
-<ul class="cts-events--upcoming">
+<ul class="events-upcoming">
 {% for event in __SELF__.events %}
 <li>
-    <div>{{ event.title }}</div>
+    <div class="events-upcoming--title">{{ event.title }}</div>
 	<div>{{ event.format_date }}</div>
     <div>{{ event.venue }}</div>
     <div>{{ event.description | raw}}</div>
