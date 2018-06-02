@@ -233,34 +233,34 @@ class Plugin extends PluginBase
 
 		// iterate through items and download files, write files.
 		foreach ($items as $number => $item) {
-				$attachments = $this->checkField($item, 'attachments');
-				if ($attachments != "") {
-					$file_id = $attachments[0]['fileId'];
+			$attachments = $this->checkField($item, 'attachments');
+			if ($attachments != "") {
+				$file_id = $attachments[0]['fileId'];
 
-					// GET REQUEST
-					try {
-						$content = $service->files->get($file_id, array("alt" => "media"));
-					} catch (\Google_Service_Exception $e) {
-						file_put_contents('php://stderr', print_r("ERROR FOR FILE ID: " . $file_id . "\n", TRUE));
+				// GET REQUEST
+				try {
+					$content = $service->files->get($file_id, array("alt" => "media"));
+				} catch (\Google_Service_Exception $e) {
+					file_put_contents('php://stderr', print_r("ERROR FOR FILE ID: " . $file_id . "\n", TRUE));
 
-						$msg = $e->getMessage();
-						file_put_contents('php://stderr', print_r("ERROR MESSAGE:\n\n" . $msg . "\n", TRUE));
-						continue;
-					}
-
-					// Open file handle for output.
-					$outHandle = fopen("storage/app/media/" . $file_id . ".jpeg", "w+");
-
-					// Until we have reached the EOF, read 1024 bytes at a time and write to the output file handle.
-					while (!$content->getBody()->eof()) {
-							fwrite($outHandle, $content->getBody()->read(1024));
-					}
-
-					// Close output file handle.
-					fclose($outHandle);
-
-					file_put_contents('php://stderr', print_r("FILE DOWNLOADED: storage/app/media/" . $file_id . ".jpeg\n", TRUE));
+					$msg = $e->getMessage();
+					file_put_contents('php://stderr', print_r("ERROR MESSAGE:\n\n" . $msg . "\n", TRUE));
+					continue;
 				}
+
+				// Open file handle for output.
+				$outHandle = fopen("storage/app/media/" . $file_id . ".jpeg", "w+");
+
+				// Until we have reached the EOF, read 1024 bytes at a time and write to the output file handle.
+				while (!$content->getBody()->eof()) {
+						fwrite($outHandle, $content->getBody()->read(1024));
+				}
+
+				// Close output file handle.
+				fclose($outHandle);
+
+				file_put_contents('php://stderr', print_r("FILE DOWNLOADED: storage/app/media/" . $file_id . ".jpeg\n", TRUE));
+			}
 		}
 	}
 
