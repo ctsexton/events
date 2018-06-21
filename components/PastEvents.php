@@ -27,7 +27,8 @@ class PastEvents extends ComponentBase
 			venue,
 			date_time,
 			event_timezone,
-			description 
+			description,
+			file_id
 			FROM camsexton_events_entries
 			WHERE date_time < datetime('now')
 			ORDER BY date_time DESC
