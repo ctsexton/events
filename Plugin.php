@@ -48,63 +48,80 @@ class Plugin extends PluginBase
 		// if sync token exists, make normal update request
 		if ($calendar->next_sync_token != FALSE) {
 			// request new records from google or cancel refresh on fail
-			$json = $this->requestNew($calendar->calendar_id, $calendar->next_sync_token, $API_KEY);
-			if ($json == NULL) {
-				return;
-			}
+			$results = $this->loadData($calendar->calendar_id, $API_KEY, $calendar->next_sync_token);
 
 			// update calendar table
-			$this->updateCalTable($calendar->calendar_id, $json);
+			$this->updateCalTable($calendar->calendar_id, $results);
 
 			// add/delete events from entries table
-			$this->loadEvents($json);
-			$this->downloadImages($json);
+			$this->loadEvents($results['items'], $results['timezone_default']);
+			$this->downloadImages($results['items']);
 		} else {
 			// if sync token is null, then delete all records, full refresh
 			// request all records from google or cancel refresh on fail
-			$json = $this->requestAll($calendar->calendar_id, $API_KEY);
-			if ($json == NULL) {
-				return;
-			}
+			$results = $this->loadData($calendar->calendar_id, $API_KEY);
 
 			// update calendar table
-			$this->updateCalTable($calendar->calendar_id, $json);
+			$this->updateCalTable($calendar->calendar_id, $results);
 
 			// Delete events from entries table
 			Db::delete('DELETE FROM camsexton_events_entries');
 
 			// Fill entries table with events
 			file_put_contents('php://stderr', print_r("ABOUT TO LOAD ALL NEW EVENTS\n", TRUE));
-			$this->loadEvents($json);
-			$this->downloadImages($json);
+			$this->loadEvents($results['items'], $results['timezone_default']);
+			$this->downloadImages($results['items']);
 		}
 
 	}
 
-	protected function requestAll($calendar_id, $API_KEY) {
+	protected function request($calendar_id, $API_KEY, $sync_token = "", $page_token = "") {
 		//
 		$URL = 'https://www.googleapis.com/calendar/v3/calendars/' 
 			. urlencode($calendar_id)
 			. '/events?key='
 			. $API_KEY;
 
+		if ($sync_token != "") {
+			$URL = $URL . '&syncToken=' . urlencode($sync_token);
+		}
+
+		if ($page_token != "") {
+			$URL = $URL . '&pageToken=' . urlencode($page_token);
+		}
+
 		return $this->makeRequest($URL);
 	}
 
-	protected function requestNew($calendar_id, $next_sync_token, $API_KEY) {
-		//
-		$URL = 'https://www.googleapis.com/calendar/v3/calendars/' 
-			. urlencode($calendar_id)
-			. '/events?syncToken='
-			. urlencode($next_sync_token)
-			. '&key='
-			. $API_KEY;
+	protected function loadData($calendar_id, $API_KEY, $sync_token = "") {
+		$json = $this->request($calendar_id, $API_KEY, $sync_token);
+		$page_token = $this->checkField($json, 'nextPageToken');
+		$next_sync_token = $this->checkField($json, 'nextSyncToken', $sync_token);
+		$timezone_default = $this->checkField($json, 'timeZone', 'UTC');
+		$summary = $this->checkField($json, 'summary');
+		$updated = $this->checkField($json, 'updated');
 
-		return $this->makeRequest($URL);
+		$items = $this->checkField($json, 'items', array());
+
+		while ($page_token != "") {
+			$json = $this->request($calendar_id, $API_KEY, $sync_token, $page_token);
+			$page_token = $this->checkField($json, 'nextPageToken');
+			$next_sync_token = $this->checkField($json, 'nextSyncToken', $sync_token);
+			$items = array_merge($items, $this->checkField($json, 'items', array()));
+		}
+
+		return array(
+			"items" => $items, 
+			"next_sync_token" => $next_sync_token, 
+			"timezone_default" => $timezone_default,
+			"summary" => $summary,
+			"updated" => $updated
+		);
 	}
 
 	// Make the GET request and return json or 1
 	protected function makeRequest($URL) {
+		file_put_contents('php://stdout', print_r($URL, TRUE));
 		$data = @file_get_contents($URL);
 		if ($data === false) {
 			file_put_contents('php://stderr', print_r("JSON DATA FALSE\n", TRUE));
@@ -133,9 +150,9 @@ class Plugin extends PluginBase
 				next_sync_token = :next_sync_token
 				WHERE calendar_id = :calendar_id', [
 					'calendar_name' => $json['summary'],
-					'timezone' => $json['timeZone'],
+					'timezone' => $json['timezone_default'],
 					'last_updated' => $json['updated'],
-					'next_sync_token' => $json['nextSyncToken'],
+					'next_sync_token' => $json['next_sync_token'],
 					'calendar_id' => $calendar_id
 				]);
 	}
@@ -151,17 +168,8 @@ class Plugin extends PluginBase
 	 }
 
 	// copy events in json into database
-	protected function loadEvents($json) {
-		// iterate through json, inserting or replacing entries
-
-		$timezone_default = $this->checkField($json, 'timeZone', 'UTC');
-		$items = $this->checkField($json, 'items');
-		if ($items == "") {
-			return;
-		}
-
+	protected function loadEvents($items, $timezone_default) {
 		foreach ($items as $number => $item) {
-
 			if ($item['status'] === 'cancelled') {
 				Db::delete('DELETE FROM camsexton_events_entries WHERE event_id = :event_id', ['event_id' => $item['id']]);
 				file_put_contents('php://stderr', print_r("DELETED: " . $item['id'] . "\n", TRUE));
@@ -210,18 +218,11 @@ class Plugin extends PluginBase
 	}
 
 	// for all image attachment links in json, download from google drive
-	protected function downloadImages($json) {
+	protected function downloadImages($items) {
 
 		// Check that key file exists
 		if (!file_exists('storage/client_secret.json')) {
 			file_put_contents('php://stderr', print_r("NO CLIENT_SECRET FILE\n", TRUE));
-			return;
-		}
-
-		// Check that there are items in the array
-		// TO DO: check attachments at this point as well before getClient
-		$items = $this->checkField($json, 'items');
-		if ($items == "") {
 			return;
 		}
 
@@ -233,45 +234,39 @@ class Plugin extends PluginBase
 
 		// iterate through items and download files, write files.
 		foreach ($items as $number => $item) {
-			$attachments = $this->checkField($item, 'attachments');
-			if ($attachments != "") {
-				$file_id = $attachments[0]['fileId'];
+				$attachments = $this->checkField($item, 'attachments');
+				if ($attachments != "") {
+					$file_id = $attachments[0]['fileId'];
 
-				// GET REQUEST
-				try {
-					$content = $service->files->get($file_id, array("alt" => "media"));
-				} catch (\Google_Service_Exception $e) {
-					file_put_contents('php://stderr', print_r("ERROR FOR FILE ID: " . $file_id . "\n", TRUE));
+					// GET REQUEST
+					try {
+						$content = $service->files->get($file_id, array("alt" => "media"));
+					} catch (\Google_Service_Exception $e) {
+						file_put_contents('php://stderr', print_r("ERROR FOR FILE ID: " . $file_id . "\n", TRUE));
 
-					$msg = $e->getMessage();
-					file_put_contents('php://stderr', print_r("ERROR MESSAGE:\n\n" . $msg . "\n", TRUE));
-					continue;
+						$msg = $e->getMessage();
+						file_put_contents('php://stderr', print_r("ERROR MESSAGE:\n\n" . $msg . "\n", TRUE));
+						continue;
+					}
+
+					// Open file handle for output.
+					$outHandle = fopen("storage/app/media/" . $file_id . ".jpeg", "w+");
+
+					// Until we have reached the EOF, read 1024 bytes at a time and write to the output file handle.
+					while (!$content->getBody()->eof()) {
+							fwrite($outHandle, $content->getBody()->read(1024));
+					}
+
+					// Close output file handle.
+					fclose($outHandle);
+
+					file_put_contents('php://stderr', print_r("FILE DOWNLOADED: storage/app/media/" . $file_id . ".jpeg\n", TRUE));
 				}
-
-				// Open file handle for output.
-				$outHandle = fopen("storage/app/media/" . $file_id . ".jpeg", "w+");
-
-				// Until we have reached the EOF, read 1024 bytes at a time and write to the output file handle.
-				while (!$content->getBody()->eof()) {
-						fwrite($outHandle, $content->getBody()->read(1024));
-				}
-
-				// Close output file handle.
-				fclose($outHandle);
-
-				file_put_contents('php://stderr', print_r("FILE DOWNLOADED: storage/app/media/" . $file_id . ".jpeg\n", TRUE));
-			}
 		}
 	}
 
 	// create new authenticated google drive client and return it
 	protected function getClient() {
-
-		// Check that key file exists
-		if (!file_exists('storage/client_secret.json')) {
-			file_put_contents('php://stderr', print_r("NO CLIENT_SECRET FILE\n", TRUE));
-			return;
-		}
 
 		$client = new Google_Client();
 		$client->setAuthConfig('storage/client_secret.json');
